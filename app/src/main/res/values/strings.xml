@@ -8,6 +8,4 @@
     <string name="lat_long_snippet">Lat: %1$.5f, Long: %2$.5f</string>
     <string name="dropped_pin">Dropped Pin</string>
     <string name="poi">poi</string>
-
-    <string name="api_key">AIzaSyDiDsoJ25JFxPX7KR9sPWjkTQ9uerB2eds</string>
 </resources>

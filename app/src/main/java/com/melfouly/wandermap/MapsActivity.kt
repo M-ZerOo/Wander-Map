@@ -1,19 +1,20 @@
 package com.melfouly.wandermap
 
+import android.Manifest
+import android.content.pm.PackageManager
 import android.content.res.Resources
 import android.os.Bundle
 import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
-import com.google.android.gms.maps.model.BitmapDescriptorFactory
-import com.google.android.gms.maps.model.LatLng
-import com.google.android.gms.maps.model.MapStyleOptions
-import com.google.android.gms.maps.model.MarkerOptions
+import com.google.android.gms.maps.model.*
 import com.melfouly.wandermap.databinding.ActivityMapsBinding
 import java.util.*
 
@@ -21,6 +22,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
 
     private lateinit var map: GoogleMap
     private lateinit var binding: ActivityMapsBinding
+    private val REQUEST_LOCATION_PERMISSION = 1
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -49,12 +51,21 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
         val lng = 30.802002
         val homeLatLng = LatLng(lat, lng)
         val zoomLevel = 15f
+        val overlaySize = 100f
         map.moveCamera(CameraUpdateFactory.newLatLngZoom(homeLatLng, zoomLevel))
         map.addMarker(MarkerOptions().position(homeLatLng))
+
+        val androidOverlay = GroundOverlayOptions().image(
+            BitmapDescriptorFactory.fromResource(
+                R.drawable.android
+            )
+        ).position(homeLatLng, overlaySize)
 
         setMapLongClick(map)
         setPoiClick(map)
         setMapStyle(map)
+        map.addGroundOverlay(androidOverlay)
+        enableMyLocation()
 
     }
 
@@ -94,6 +105,38 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
             }
         } catch (e: Resources.NotFoundException) {
             Log.d("MapStyle", "Can't find style. Error:", e)
+        }
+    }
+
+    private fun isPermissionGranted(): Boolean {
+        return ContextCompat.checkSelfPermission(
+            this,
+            Manifest.permission.ACCESS_FINE_LOCATION
+        ) == PackageManager.PERMISSION_GRANTED
+    }
+
+    private fun enableMyLocation() {
+        if (isPermissionGranted()) {
+            map.isMyLocationEnabled = true
+        } else {
+            ActivityCompat.requestPermissions(
+                this,
+                arrayOf(Manifest.permission.ACCESS_FINE_LOCATION),
+                REQUEST_LOCATION_PERMISSION
+            )
+        }
+    }
+
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<out String>,
+        grantResults: IntArray
+    ) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        if (requestCode == REQUEST_LOCATION_PERMISSION) {
+            if (grantResults.isNotEmpty() && (grantResults[0] == PackageManager.PERMISSION_GRANTED)) {
+                enableMyLocation()
+            }
         }
     }
 
